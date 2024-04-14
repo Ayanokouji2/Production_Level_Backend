@@ -1,7 +1,7 @@
 const asyncHandler = (requestHandler) => {
     return (req, res, next) => {
         Promise
-            .resolve(() => requestHandler(req, res, next))
+            .resolve(requestHandler(req, res, next))
             .catch((err) => {
                 next(err)
                 // res.status(err.status || 500).json({
@@ -12,7 +12,7 @@ const asyncHandler = (requestHandler) => {
     }
 }
 
-export { asyncHandler }
+export default  asyncHandler 
 
 //TODO Another way to achieve the same
 

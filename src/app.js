@@ -15,4 +15,11 @@ app.use(express.static("public"))  // any folder that can be accessed for storin
 
 app.use(cookieParser())
 
+
+// import routes
+
+import userRouter from './Routes/user.routes.js'  // can only import with different name if we export it using default keyword
+
+app.use("/api/v1/users", userRouter)
+
 export { app }

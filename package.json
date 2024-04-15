@@ -21,6 +21,7 @@
     "prettier": "^3.2.5"
   },
   "devDependencies": {
+    "cloudinary": "^2.1.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "multer": "^1.4.5-lts.1"

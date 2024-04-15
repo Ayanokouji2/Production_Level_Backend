@@ -11,7 +11,7 @@ app.use(cors({
 
 app.use(express.json({ limit: "20Kb" }));
 app.use(express.urlencoded({ extended: true, limit: "20Kb" }))
-app.use(express.static("/public"))  // any folder that can be accessed for storing file in the folder
+app.use(express.static("public"))  // any folder that can be accessed for storing file in the folder
 
 app.use(cookieParser())
 

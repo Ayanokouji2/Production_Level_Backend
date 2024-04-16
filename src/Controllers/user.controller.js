@@ -4,9 +4,26 @@ import { User } from '../Models/user.model.js'
 import { uploadOnCloudinary } from '../Utils/CloudinaryFileUpload.js'
 import { ApiResponse } from '../Utils/ApiResponse.js'
 
+
+const generateRefreshAndAccessToken = async (userId) => {
+    try {
+
+        const user = await User.findById({ _id: userId })
+        const access_token = user.generateAccesToken()
+        const refresh_token = user.generateRefreshToken()
+
+        user.refreshToken = refresh_token
+
+        await user.save({ validateBeforeSave: false });
+        return { accessToken: access_token, refreshToken: refresh_token }
+    } catch (error) {
+        return res.status(500).json(new ApiError(500, "Something went wrong while generating refresh Token or access Token"))
+    }
+}
+
 const userRegister = asyncHandler(async (req, res) => {
     try {
-        /**
+        /*
          * [✔️] get user details from frontend
          * [✔️] validate the fields 
          * [✔️] check if user exists: username, email
@@ -74,15 +91,45 @@ const userRegister = asyncHandler(async (req, res) => {
         return res.status(201).json(new ApiResponse(200, created_User, "User Created Succesfully"))
 
     } catch (error) {
-
+        return res.status(500).json(new ApiError(500, "Registeration Failed "))
     }
 })
 
 
 const userLogin = asyncHandler(async (req, res) => {
-    res.status(200).json({
-        message: "success login"
-    })
+    try {
+        /**
+         *  [✔️] Get (username or email) and password from req.body
+         *  [✔️] Validate username and password
+         *  [✔️] fetch user using username or email
+         *  [✔️] Check if user exists 
+         *  [✔️] validate the password
+         *  [✔️] generate ACCESS & REFRESH jwt token
+         *  [] send secure cookies 
+         *  [] return the response
+         */
+        const { username, password, email } = req.body
+
+        if ((!username && !email) || !password) {
+            return res.status(400).json(new ApiError(400, "Fields are Required"))
+        }
+
+        const user_from_db = await User.findOne({ $or: [{ username }, { email }] })
+
+        if (!user_from_db) {
+            return res.status(404).json(new ApiError(404, "No existing user"))
+        }
+
+        const isPasswordCorrect = await user_from_db.isPasswordCorrect(password)  // the methods are not the part of the Database Model i.e (User) but it is the methods of the instance i.e (user_from_db)
+        if (!isPasswordCorrect) {
+            return res.status(401).json(new ApiError(404, "Invalid credentials"))
+        }
+
+        const { refreshToken, accessToken } = await generateRefreshAndAccessToken(user_from_db._id);
+        
+    } catch (error) {
+
+    }
 })
 
 export { userRegister, userLogin }

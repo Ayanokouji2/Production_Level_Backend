@@ -44,11 +44,12 @@ const userRegister = asyncHandler(async (req, res) => {
          * [✔️] send the response to the frontend
          */
 
-        const { username, email, password, fullName } = req.body
+            const { username, email, password, fullName } = req.body
 
-        if ([username, email, password, fullName].some((field) => field === undefined || field?.trim() === "")) {
-            return res.status(400).json(new ApiError(400, " Required Missing Credentials"))
-        }
+            if ([username, email, password, fullName].some((field) => field === undefined || field?.trim() === "")) {
+                console.log("command was here")
+                throw new ApiError(400, " Required Missing Credentials")
+            }
         const existing_user = await User.findOne({ $or: [{ username }, { email }] })
 
         if (existing_user) {

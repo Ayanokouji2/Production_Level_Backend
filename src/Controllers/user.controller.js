@@ -21,6 +21,11 @@ const generateRefreshAndAccessToken = async (userId) => {
     }
 }
 
+const cookieOption = {
+    httpOnly: true,
+    secure: true
+}
+
 const userRegister = asyncHandler(async (req, res) => {
     try {
         /*
@@ -105,8 +110,8 @@ const userLogin = asyncHandler(async (req, res) => {
          *  [✔️] Check if user exists 
          *  [✔️] validate the password
          *  [✔️] generate ACCESS & REFRESH jwt token
-         *  [] send secure cookies 
-         *  [] return the response
+         *  [✔️] send secure cookies 
+         *  [✔️] return the response
          */
         const { username, password, email } = req.body
 
@@ -114,7 +119,7 @@ const userLogin = asyncHandler(async (req, res) => {
             return res.status(400).json(new ApiError(400, "Fields are Required"))
         }
 
-        const user_from_db = await User.findOne({ $or: [{ username }, { email }] })
+        const user_from_db = await User.findOne({ $or: [{ username: username.toLowerCase() }, { email }] })
 
         if (!user_from_db) {
             return res.status(404).json(new ApiError(404, "No existing user"))
@@ -126,10 +131,57 @@ const userLogin = asyncHandler(async (req, res) => {
         }
 
         const { refreshToken, accessToken } = await generateRefreshAndAccessToken(user_from_db._id);
-        
+
+        //! Why i feteched the user again ?
+        //? Because in the generateRefreshAndAccessToken() we updated the field accessToken, bt the field is not accessible by the user_from_db 
+
+        const user_updated = await User.findOne({ $or: [{ username }, { email }] })
+            .select("-password -refreshToken")
+
+
+        // To secure the cookie by making it accessible from server not from frontend
+
+
+        res
+            .status(200)
+            .cookie("refreshToken", refreshToken, cookieOption)
+            .cookie("accessToken", accessToken, cookieOption)
+            .json(new ApiResponse(200, user_updated, " User authenticated ready for Login"))
+
     } catch (error) {
 
     }
 })
 
-export { userRegister, userLogin }
+
+const userLogout = asyncHandler(async (req, res) => {
+    try {
+        /* 
+        *  [✔️] get user from Db
+        *  [✔️] Delete refreshToken from the cookie. 
+        *  [✔️] Delete refershToken from the database.
+        */
+
+        const user = req.user
+
+        const updated_user = await User.findByIdAndUpdate(user._id,
+            { $set: { refreshToken: null } }, { new: true })
+            .select("-password")
+
+        req.user = null
+        
+        if (!updated_user) {
+            return res.status(500).json(new ApiError(500, "Unable to Update User refreshToken"))
+        }
+
+        return res
+            .status(200)
+            .clearCookie("refreshToken", cookieOption)
+            .clearCookie("accessToken", cookieOption)
+            .json(new ApiResponse(200, null, " User Logout Successful"))
+
+    } catch (error) {
+        return res.status(500).json(new ApiError(500, "Unable to Logout"))
+    }
+})
+export { userRegister, userLogin, userLogout }

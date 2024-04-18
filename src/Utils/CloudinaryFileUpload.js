@@ -9,8 +9,10 @@ cloudinary.config({
 
 const uploadOnCloudinary = async (localFilePath) => {
     try {
-        if (!localFilePath)
+        if (!localFilePath){
+            console.log("No localPath to upload the image")
             return null;
+        }
 
         const response = await cloudinary.uploader.upload(localFilePath, { resourse_type: "auto" })
         // fs.unlinkSync(localFilePath)
@@ -26,4 +28,31 @@ const uploadOnCloudinary = async (localFilePath) => {
 
 }
 
-export { uploadOnCloudinary }
+const deleteCloudinaryImage = async(localPath, public_id)=>{
+    try {
+        console.log("command in cloudinary file",public_id)
+        if(!public_id){
+            console.log("No public_id to delete the image")
+            return null
+        }
+
+        const response = await cloudinary.uploader.destroy(public_id)
+
+        console.log(response)
+        if(!response){
+            console.log("Something went wrong || public_id didn't match any image")
+            return null
+        }
+
+        return response
+
+    } catch (error) {
+        console.log("Error while deleting image from cloudinary")
+        return null;
+    }
+    finally{
+        fs.unlink(localPath)
+    }
+}
+
+export { uploadOnCloudinary, deleteCloudinaryImage }

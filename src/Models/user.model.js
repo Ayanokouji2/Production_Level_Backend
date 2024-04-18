@@ -29,11 +29,11 @@ const userSchema = new Schema({
         required: true,
     },
     avatar: {
-        type: String,
+        type: Object,
         required: true
     },
     coverImage: {
-        type: String
+        type: Object
     },
     refreshToken: {
         type: String

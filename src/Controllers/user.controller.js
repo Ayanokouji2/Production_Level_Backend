@@ -72,7 +72,7 @@ const userRegister = asyncHandler(async (req, res) => {
             return res.status(500).json(new ApiError(500, 'Avatar Upload failed..'))
         }
 
-        var coverImage 
+        var coverImage
         if (coverImageLocalPath && coverImageLocalPath !== "") {
             coverImage = await uploadOnCloudinary(coverImageLocalPath)
         }
@@ -86,13 +86,13 @@ const userRegister = asyncHandler(async (req, res) => {
             email,
             fullName,
             password,
-            avatar: { 
-                url: avatar.url, 
-                public_id: avatar.public_id 
+            avatar: {
+                url: avatar.url,
+                public_id: avatar.public_id
             },
-            coverImage:{ 
-                url: coverImage?.url, 
-                public_id: coverImage?.public_id 
+            coverImage: {
+                url: coverImage?.url,
+                public_id: coverImage?.public_id
             },
         }
 
@@ -271,15 +271,15 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
             return res.status(401).json(new ApiError(401, "Unauthorized to perform this action"))
 
         const user_from_db = await User.findById(userId)
-        
-        const avatarLocalPath = req.file?.path
-        
-        if (!avatarLocalPath)
-        return res.status(400).json(new ApiError(400, "Avatar is required"))
-        const result = await deleteCloudinaryImage(avatarLocalPath,user_from_db.avatar.public_id)
 
-        if(result !== "ok")
-            return res.status(400).json( new ApiError(400, " user Doesn't have a image"))
+        const avatarLocalPath = req.file?.path
+
+        if (!avatarLocalPath)
+            return res.status(400).json(new ApiError(400, "Avatar is required"))
+        const result = await deleteCloudinaryImage(avatarLocalPath, user_from_db.avatar.public_id)
+
+        if (result !== "ok")
+            return res.status(400).json(new ApiError(400, " user Doesn't have a image"))
 
         const avatar = await uploadOnCloudinary(avatarLocalPath)
 
@@ -338,6 +338,104 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 })
 
 
+const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
+    try {
+        const { username } = req.params
+
+        if (!username)
+            return res.status(400).json(new ApiError(400, "Username is required"))
+
+        const channel = await User.aggregate([
+            //stage 1: Find the user with the username
+            {
+                $match: { username: username?.toLowerCase() }
+            },
+
+            // Stage 2: Find the Number of Subscriber by counting the number of documents in the Susbcription collection where the channel is the userName [JOIN]   
+            {
+                $lookup: {
+                    from: "Subscription",
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscribers"
+                }
+            },
+
+            // Stage 3: Find the Number of Subscribed Channels by counting the number of documents in the Subscription collection where the subscriber is the userName [JOIN]
+            {
+                $lookup: {
+                    from: "Subscription",
+                    localField: "_id",
+                    foreignField: "subscriber",
+                    as: "subscribedChannels"
+                }
+            },
+
+            // Stage 4: get All the videos of the channel [JOIN]
+            // {
+            //     $lookup:{
+            //         from:"Video",
+            //         localField:"username",   // we can not find videos with username because in the Video Collections owner field is store with _id.
+
+            //         foreignField:"owner",
+            //         as:"videos_of_channel"
+            //     }
+            // },
+
+            // Stage 5: Add the Above Fields into the document
+            {
+                $addFields: {
+                    subscriberCount: { $size: "$subscribers" },
+                    subscribedChannelCount: { $size: "$subscribedChannels" },
+                    isSubscribed: {
+                        $cond: {
+                            if: {
+                                $in: [req.user?._id, "$subscribers.subscribe"]
+                            },
+                            then: true,
+                            else: false
+                        }
+                    }
+                }
+            },
+            {
+                $roject: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                    subscriberCount: 1,
+                    subscribedChannelCount: 1,
+                    isSubscribed: 1
+                }
+            }
+
+        ])
+
+        if(!channel?.length )
+            return res.status(500).json(new ApiError(500,"No Channel found using this username"))
+
+        console.log(channel)
+
+        return res.status(200).json(new ApiResponse(200, channel[0],"Channel Details"))
+
+    } catch (error) {
+        return res.status(500).json(new ApiError(500, "Unable to Get User channel profile"))
+    }
+})
+
+
+const getWatchHistory = asyncHandler( async ( req, res )=>{
+
+    const user = await User.aggregate([
+        {
+            $match:{
+                _id: new Schema.Types.ObjectId(req.user?._id) // [ Interview - 1 ] :-> Why didn't we just use {req.user._id} bcz this is a string and we needed mongoose ObjectId , but other place we can use req.user._id because mongoose internally parses the string into ObjectId, [ and the aggregation query is went directly instead of going through mongoose ] that's why we are making an ObjectId from the string.
+            }
+        }
+    ])
+})
+
 
 export {
     userRegister,
@@ -347,5 +445,6 @@ export {
     currentCurrentPassword,
     getCurrentUser,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getOtherUserChannelProfile
 }

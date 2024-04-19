@@ -354,7 +354,7 @@ const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
             // Stage 2: Find the Number of Subscriber by counting the number of documents in the Susbcription collection where the channel is the userName [JOIN]   
             {
                 $lookup: {
-                    from: "Subscription",
+                    from: "subscriptions",
                     localField: "_id",
                     foreignField: "channel",
                     as: "subscribers"
@@ -364,7 +364,7 @@ const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
             // Stage 3: Find the Number of Subscribed Channels by counting the number of documents in the Subscription collection where the subscriber is the userName [JOIN]
             {
                 $lookup: {
-                    from: "Subscription",
+                    from: "subscriptions",
                     localField: "_id",
                     foreignField: "subscriber",
                     as: "subscribedChannels"
@@ -412,12 +412,12 @@ const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
 
         ])
 
-        if(!channel?.length )
-            return res.status(500).json(new ApiError(500,"No Channel found using this username"))
+        if (!channel?.length)
+            return res.status(500).json(new ApiError(500, "No Channel found using this username"))
 
         console.log(channel)
 
-        return res.status(200).json(new ApiResponse(200, channel[0],"Channel Details"))
+        return res.status(200).json(new ApiResponse(200, channel[0], "Channel Details"))
 
     } catch (error) {
         return res.status(500).json(new ApiError(500, "Unable to Get User channel profile"))
@@ -425,15 +425,73 @@ const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
 })
 
 
-const getWatchHistory = asyncHandler( async ( req, res )=>{
+const getWatchHistory = asyncHandler(async (req, res) => {
 
-    const user = await User.aggregate([
-        {
-            $match:{
-                _id: new Schema.Types.ObjectId(req.user?._id) // [ Interview - 1 ] :-> Why didn't we just use {req.user._id} bcz this is a string and we needed mongoose ObjectId , but other place we can use req.user._id because mongoose internally parses the string into ObjectId, [ and the aggregation query is went directly instead of going through mongoose ] that's why we are making an ObjectId from the string.
+    try {
+        const userWatchHistory = await User.aggregate([
+            {
+                $match: {
+                    _id: new Schema.Types.ObjectId(req.user?._id) // [ Interview - 1 ] :-> Why didn't we just use {req.user._id} bcz this is a string and we needed mongoose ObjectId , but other place we can use req.user._id because mongoose internally parses the string into ObjectId, [ and the aggregation query is went directly instead of going through mongoose ] that's why we are making an ObjectId from the string.
+                }
+            },
+            {
+                $lookup: {
+                    from: 'videos',
+                    localField: "watchHistory",
+                    foreignField: "_id",
+                    as: "watchHistory",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "owner",
+                                foreignField: "_id",
+                                as: "Owner",
+                                pipeline: [
+                                    {
+                                        $project: {
+                                            fullName: 1,
+                                            avatar: 1,
+                                            username: 1
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        // {  // can be done like this also
+                        //     $project: {
+                        //         fullName: 1,
+
+                        //     }
+                        // },
+                        // This step is done for formatting of data as instead of array of object os size [1] we get only object ⬇️
+                        {
+                            $addFields: {
+                                owner: {
+                                    $first: "$Owner"
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                addFields:{
+                    watchHistory:{
+                        $first:"$watchHistory"
+                    }
+                }
             }
+        ])
+
+        if(!userWatchHistory){
+            res.status(400).json(new ApiError(400,"No History Found"))
         }
-    ])
+
+        res.status(200).json(new ApiResponse(200, userWatchHistory, " Watch History of the user" ))
+    } catch (error) {
+        return res.status(500).json(new ApiError(500, "Unable to Get User Watch History"))
+    }
 })
 
 
@@ -446,5 +504,6 @@ export {
     getCurrentUser,
     updateUserAvatar,
     updateUserCoverImage,
-    getOtherUserChannelProfile
+    getOtherUserChannelProfile,
+    getWatchHistory
 }

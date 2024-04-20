@@ -1,6 +1,7 @@
 import { Video } from "../Models/video.model.js";
 import asyncHandler from "../Utils/asyncHandler.js";
-import ApiError from "../Utils/ApiError.js";
+import { ApiError } from "../Utils/ApiError.js";
+import { ApiResponse } from "../Utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../Utils/cloudinary.js";
 
 /**
@@ -57,7 +58,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
         if (!video)
             return res.status(500).json(new ApiError(500, "Error while uploading video", true))
 
-        return res.status(201).json({ success: true, data: video })
+        return res.status(201).json(new ApiResponse(201,video, "Video uploaded successfully"))
 
 
     } catch (error) {

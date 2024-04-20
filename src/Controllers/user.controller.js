@@ -147,7 +147,7 @@ const userLogin = asyncHandler(async (req, res) => {
         //? Because in the generateRefreshAndAccessToken() we updated the field accessToken, bt the field is not accessible by the user_from_db 
 
         const user_updated = await User.findOne({ $or: [{ username }, { email }] })
-            .select("-password -refreshToken")
+            .select("-password")
 
 
         // To secure the cookie by making it accessible from server not from frontend
@@ -176,14 +176,15 @@ const userLogout = asyncHandler(async (req, res) => {
         const user = req.user
 
         const updated_user = await User.findByIdAndUpdate(user._id,
-            { $set: { refreshToken: null } }, { new: true })
+            { $unset: { refreshToken: 1 } }, { new: true })
             .select("-password")
 
-        req.user = null
 
         if (!updated_user) {
             return res.status(500).json(new ApiError(500, "Unable to Update User refreshToken"))
         }
+
+        req.user = undefined
 
         return res
             .status(200)
@@ -236,7 +237,8 @@ const currentCurrentPassword = asyncHandler(async (req, res) => {
         const userId = req.user?._id;
 
         const user = await User.findById(userId)
-
+        console.log("this is password",oldPassword)
+        
         if (!user.isPasswordCorrect(oldPassword)) {
             return res.status(401).json(new ApiError(401, "Invalid Password"))
         }
@@ -265,6 +267,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
     try {
+        console.log("user change")
         const userId = req.user?._id
 
         if (!userId)
@@ -272,6 +275,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
         const user_from_db = await User.findById(userId)
 
+        console.log(req.file)
         const avatarLocalPath = req.file?.path
 
         if (!avatarLocalPath)
@@ -341,10 +345,10 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
     try {
         const { username } = req.params
-
+        
         if (!username)
-            return res.status(400).json(new ApiError(400, "Username is required"))
-
+        return res.status(400).json(new ApiError(400, "Username is required"))
+    
         const channel = await User.aggregate([
             //stage 1: Find the user with the username
             {
@@ -399,7 +403,7 @@ const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
                 }
             },
             {
-                $roject: {
+                $project: {
                     fullName: 1,
                     username: 1,
                     avatar: 1,
@@ -415,18 +419,17 @@ const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
         if (!channel?.length)
             return res.status(500).json(new ApiError(500, "No Channel found using this username"))
 
-        console.log(channel)
 
         return res.status(200).json(new ApiResponse(200, channel[0], "Channel Details"))
 
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Unable to Get User channel profile"))
+        return res.status(500).json(new ApiError(500, error.message||"Unable to Get User channel profile"))
     }
 })
 
 
 const getWatchHistory = asyncHandler(async (req, res) => {
-
+    console.log(req.user._id)
     try {
         const userWatchHistory = await User.aggregate([
             {
@@ -490,7 +493,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 
         res.status(200).json(new ApiResponse(200, userWatchHistory, " Watch History of the user" ))
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Unable to Get User Watch History"))
+        return res.status(500).json(new ApiError(500, error.message||"Unable to Get User Watch History"))
     }
 })
 

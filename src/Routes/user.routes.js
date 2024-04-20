@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { currentCurrentPassword, getCurrentUser, getOtherUserChannelProfile, getWatchHistory, regeneratingAccessToken, updateUserAvatar, userLogin, userLogout, userRegister } from '../Controllers/user.controller.js'
+import { currentCurrentPassword, getCurrentUser, getOtherUserChannelProfile, getWatchHistory, regeneratingAccessToken, updateUserAvatar, updateUserCoverImage, userLogin, userLogout, userRegister } from '../Controllers/user.controller.js'
 import { upload } from "../Middleware/multer.middleware.js"
 import { verifyJWT } from '../Middleware/auth.middleware.js';
 
@@ -22,12 +22,11 @@ router
 
 //! Secured Routes
 router
-    .use(verifyJWT)
     .route("/logout")
-    .get(userLogout)
+    .get(verifyJWT,userLogout)
 
 router
-    .route("/refresh-token")
+    .route("/regenerate-refresh-token")
     .post(regeneratingAccessToken)
 
 router
@@ -48,7 +47,7 @@ router
 router
     .use(verifyJWT, upload.single('coverImage'))
     .route("/change-coverImage")
-    .patch(updateUserAvatar)
+    .patch(updateUserCoverImage)
 
 router
     .use(verifyJWT)

@@ -2,10 +2,10 @@ import { Video } from "../Models/video.model.js";
 import asyncHandler from "../Utils/asyncHandler.js";
 import { ApiError } from "../Utils/ApiError.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
-import { uploadOnCloudinary } from "../Utils/cloudinary.js";
+import { uploadOnCloudinary } from "../Utils/CloudinaryFileUpload.js";
 
-/**
- *  [] Upload a video in a channel by a user
+/*
+ *  [✔️] Upload a video in a channel by a user
  *  [] get a video from a channel
  *  [] get all the video of channel 
  *  [] update video details { title, description, thumbnail, isPublished }
@@ -14,11 +14,12 @@ import { uploadOnCloudinary } from "../Utils/cloudinary.js";
 
 const uploadVideo = asyncHandler(async (req, res) => {
     try {
-        const { title, description, thumbnail } = req.body
+        const { title, description } = req.body
 
-        if ([title, description, thumbnail].some(item => item !== description && item !== undefined && item.trim() !== "")) {
+        if (!title) {
             return res.status(400).json(new ApiError(400, "Please provide all the required fields", true))
         }
+
 
         const videoLocalPath = req.files?.video[0]?.path
         const thumbnailLocalPath = req.files?.thumbnail[0]?.path
@@ -33,8 +34,11 @@ const uploadVideo = asyncHandler(async (req, res) => {
 
         const thumbnailUploadResponse = await uploadOnCloudinary(thumbnailLocalPath);
 
-        if (!videoUploadResponse || !thumbnailUploadResponse)
-            return res.status(500).json(new ApiError(500, "Error while uploading video", true))
+        if (!videoUploadResponse)
+            return res.status(500).json(new ApiError(500, "Errorn fuicking errror uploading video", true))
+
+        if (!thumbnailUploadResponse)
+            return res.status(500).json(new ApiError(500, "Error while uploading thumbnail", true))
 
         const videoOption = {
             url: videoUploadResponse.url,
@@ -46,23 +50,24 @@ const uploadVideo = asyncHandler(async (req, res) => {
             pulic_id: thumbnailUploadResponse.public_id,
         }
 
+
         const video = await Video.create({
-            title,
-            description,
-            thumbnail,
             videoFile: videoOption,
             thumbnail: thumbnailOption,
+            title,
+            description,
             owner: req.user._id,
+            duration: videoUploadResponse.duration
         })
 
         if (!video)
-            return res.status(500).json(new ApiError(500, "Error while uploading video", true))
+            return res.status(500).json(new ApiError(500, "Error while uploading video in the data base", true))
 
-        return res.status(201).json(new ApiResponse(201,video, "Video uploaded successfully"))
+        return res.status(201).json(new ApiResponse(201, video, "Video uploaded successfully"))
 
 
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Error while uploading video" + error.messsage, true))
+        return res.status(500).json(new ApiError(500, error.messsage, true))
     }
 })
 

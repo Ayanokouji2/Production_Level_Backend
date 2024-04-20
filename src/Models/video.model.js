@@ -7,7 +7,7 @@ const videoSchema = new Schema({
         required: true
     },
     thumbnail: {
-        type: String,
+        type: Object,
         required: true,
     },
     title: {
@@ -21,7 +21,6 @@ const videoSchema = new Schema({
     },
     views: {
         type: Number,
-        required: true,
         default: 0
     },
     isPublished: {

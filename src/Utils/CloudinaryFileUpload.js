@@ -9,29 +9,36 @@ cloudinary.config({
 
 const uploadOnCloudinary = async (localFilePath) => {
     try {
-        if (!localFilePath){
+        if (!localFilePath) {
             console.log("No localPath to upload the image")
             return null;
         }
 
-        const response = await cloudinary.uploader.upload(localFilePath, { resourse_type: "auto" })
-        // fs.unlinkSync(localFilePath)
+        const response = await cloudinary.uploader.upload(localFilePath, { resource_type: "auto" })
+
+        if (!response) {
+            console.log("Something went wrong while uploading image")
+            return null;
+        }
+
         return response
+
+
     } catch (error) {
         // fs.unlinkSync(localFilePath)
-        console.log(" Error while Uploading File into cloudinary and removing file from server ")
+        console.log(` Error while Uploading File into cloudinary and removing file from server ${error.message}`)
 
         return null;
-    }finally{
+    } finally {
         fs.unlinkSync(localFilePath)
     }
 
 }
 
-const deleteCloudinaryImage = async(localPath, public_id)=>{
+const deleteCloudinaryImage = async (localPath, public_id) => {
     try {
-        console.log("command in cloudinary file",public_id)
-        if(!public_id){
+        console.log("command in cloudinary file", public_id)
+        if (!public_id) {
             console.log("No public_id to delete the image")
             return null
         }
@@ -39,7 +46,7 @@ const deleteCloudinaryImage = async(localPath, public_id)=>{
         const response = await cloudinary.uploader.destroy(public_id)
 
         console.log(response)
-        if(!response){
+        if (!response) {
             console.log("Something went wrong || public_id didn't match any image")
             return null
         }
@@ -50,7 +57,7 @@ const deleteCloudinaryImage = async(localPath, public_id)=>{
         console.log("Error while deleting image from cloudinary")
         return null;
     }
-    finally{
+    finally {
         fs.unlink(localPath)
     }
 }

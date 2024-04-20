@@ -11,8 +11,8 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         if (!userCookie) {
             return res.status(401).json(new ApiError(401, "Unauthorized Access"))
         }
-        
-        const userToken =  jwt.verify(userCookie, process.env.REFRESH_TOKEN_SECRET);
+
+        const userToken = jwt.verify(userCookie, process.env.REFRESH_TOKEN_SECRET);
 
         const user = await User.findById(userToken?._id).select("-password -refreshToken");
 

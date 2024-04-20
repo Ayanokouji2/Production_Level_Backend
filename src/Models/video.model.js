@@ -3,7 +3,7 @@ import aggregate_paginate from 'mongoose-aggregate-paginate-v2'
 
 const videoSchema = new Schema({
     videoFile: {
-        type: String,
+        type: Object,
         required: true
     },
     thumbnail: {
@@ -17,7 +17,7 @@ const videoSchema = new Schema({
     },
     description: {
         type: String,
-        trim: true
+        trim: true,
     },
     views: {
         type: Number,

@@ -23,7 +23,7 @@ router
 //! Secured Routes
 router
     .route("/logout")
-    .get(verifyJWT,userLogout)
+    .get(verifyJWT, userLogout)
 
 router
     .route("/regenerate-refresh-token")
@@ -40,14 +40,15 @@ router
     .get(getCurrentUser)
 
 router
-    .use(verifyJWT, upload.single('avatar'))
     .route("/change-avatar")
-    .patch(updateUserAvatar)
+    .patch(verifyJWT,
+        upload.single("avatar"), updateUserAvatar)
 
 router
-    .use(verifyJWT, upload.single('coverImage'))
     .route("/change-coverImage")
-    .patch(updateUserCoverImage)
+    .patch(verifyJWT,
+        upload.single("coverImage"), updateUserCoverImage)
+
 
 router
     .use(verifyJWT)

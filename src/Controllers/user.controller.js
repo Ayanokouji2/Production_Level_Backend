@@ -237,8 +237,8 @@ const currentCurrentPassword = asyncHandler(async (req, res) => {
         const userId = req.user?._id;
 
         const user = await User.findById(userId)
-        console.log("this is password",oldPassword)
-        
+        console.log("this is password", oldPassword)
+
         if (!user.isPasswordCorrect(oldPassword)) {
             return res.status(401).json(new ApiError(401, "Invalid Password"))
         }
@@ -267,7 +267,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
     try {
-        console.log("user change")
         const userId = req.user?._id
 
         if (!userId)
@@ -275,34 +274,39 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
         const user_from_db = await User.findById(userId)
 
-        console.log(req.file)
-        const avatarLocalPath = req.file?.path
+        const avatarLocalPath = req.files?.avatar[0]?.path
 
+
+        console.log("Hello avatarr", avatarLocalPath)
         if (!avatarLocalPath)
             return res.status(400).json(new ApiError(400, "Avatar is required"))
+
         const result = await deleteCloudinaryImage(avatarLocalPath, user_from_db.avatar.public_id)
 
-        if (result !== "ok")
-            return res.status(400).json(new ApiError(400, " user Doesn't have a image"))
+        if (result === null || result !== "ok")
+            return res.status(400).json(new ApiError(400, " user Doesn't have a image to delete"))
 
+        console.log("Avatar LocalPath", avatarLocalPath)
         const avatar = await uploadOnCloudinary(avatarLocalPath)
 
         if (!avatar)
             return res.status(500).json(new ApiError(500, "Error while uploading image to cloudinary"))
 
+        console.log("Uploade Avatar", avatar)
         const avatarObject = {
             url: avatar.url,
             public_id: avatar.public_id
         }
         const user = await User.findByIdAndUpdate(userId, { $set: { avatar: avatarObject } }, { new: true }).select("-password -refreshToken")
 
+        console.log("User Image is Updated", user)
         if (!user)
             return res.status(500).json(new ApiError(500, " Error while fetching or updating user "))
 
         return res.status(200).json(new ApiResponse(200, result, "Avatar Updated Successful"))
 
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Unable to update current user avatar"))
+        return res.status(500).json(new ApiError(500, "Unable to update current user avatar" + error.message))
     }
 })
 
@@ -314,12 +318,12 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         if (!userId)
             return res.status(401).json(new ApiError(401, "Unauthorized to perform this action"))
 
-        const CoverImageLocalPath = req.file?.path
+        const coverImageLocalPath = req.files?.coverImage[0]?.path
 
-        if (!CoverImageLocalPath)
+        if (!coverImageLocalPath)
             return res.status(400).json(new ApiError(400, "CoverImage is required"))
 
-        const coverImage = await uploadOnCloudinary(CoverImageLocalPath)
+        const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
         if (!coverImage)
             return res.status(500).json(new ApiError(500, "Error while uploading image to cloudinary"))
@@ -329,15 +333,19 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
             public_id: coverImage.public_id
         }
 
-        const user = await User.findByIdAndUpdate(userId, { $set: { coverImage: coverImageObject } }, { new: true }).select("-password -refreshToken")
+        const user = await User.findByIdAndUpdate(userId, { $set: { coverImage: coverImageObject } }).select("-password -refreshToken")
 
         if (!user)
             return res.status(500).json(new ApiError(500, " Error while fetching or updating user "))
 
+        if (user.coverImage.public_id) {
+            await deleteCloudinaryImage(user.coverImage.public_id)
+        }
+
         return res.status(200).json(new ApiResponse(200, user, "CoverImage Updated Successful"))
 
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Unable to update current user avatar"))
+        return res.status(500).json(new ApiError(500, "Unable to update current user CoverImage"))
     }
 })
 
@@ -345,10 +353,10 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
     try {
         const { username } = req.params
-        
+
         if (!username)
-        return res.status(400).json(new ApiError(400, "Username is required"))
-    
+            return res.status(400).json(new ApiError(400, "Username is required"))
+
         const channel = await User.aggregate([
             //stage 1: Find the user with the username
             {
@@ -423,7 +431,7 @@ const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
         return res.status(200).json(new ApiResponse(200, channel[0], "Channel Details"))
 
     } catch (error) {
-        return res.status(500).json(new ApiError(500, error.message||"Unable to Get User channel profile"))
+        return res.status(500).json(new ApiError(500, error.message || "Unable to Get User channel profile"))
     }
 })
 
@@ -479,21 +487,21 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 }
             },
             {
-                addFields:{
-                    watchHistory:{
-                        $first:"$watchHistory"
+                addFields: {
+                    watchHistory: {
+                        $first: "$watchHistory"
                     }
                 }
             }
         ])
 
-        if(!userWatchHistory){
-            res.status(400).json(new ApiError(400,"No History Found"))
+        if (!userWatchHistory) {
+            res.status(400).json(new ApiError(400, "No History Found"))
         }
 
-        res.status(200).json(new ApiResponse(200, userWatchHistory, " Watch History of the user" ))
+        res.status(200).json(new ApiResponse(200, userWatchHistory, " Watch History of the user"))
     } catch (error) {
-        return res.status(500).json(new ApiError(500, error.message||"Unable to Get User Watch History"))
+        return res.status(500).json(new ApiError(500, error.message || "Unable to Get User Watch History"))
     }
 })
 

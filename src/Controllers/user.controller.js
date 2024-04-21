@@ -4,6 +4,7 @@ import { ApiError } from '../Utils/ApiError.js'
 import { User } from '../Models/user.model.js'
 import { deleteCloudinaryImage, uploadOnCloudinary } from '../Utils/CloudinaryFileUpload.js'
 import { ApiResponse } from '../Utils/ApiResponse.js'
+import mongoose from 'mongoose'
 
 
 const generateRefreshAndAccessToken = async (userId) => {
@@ -442,7 +443,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         const userWatchHistory = await User.aggregate([
             {
                 $match: {
-                    _id: new Schema.Types.ObjectId(req.user?._id) // [ Interview - 1 ] :-> Why didn't we just use {req.user._id} bcz this is a string and we needed mongoose ObjectId , but other place we can use req.user._id because mongoose internally parses the string into ObjectId, [ and the aggregation query is went directly instead of going through mongoose ] that's why we are making an ObjectId from the string.
+                    _id: new mongoose.Types.ObjectId(req.user?._id) // [ Interview - 1 ] :-> Why didn't we just use {req.user._id} bcz this is a string and we needed mongoose ObjectId , but other place we can use req.user._id because mongoose internally parses the string into ObjectId, [ and the aggregation query is went directly instead of going through mongoose ] that's why we are making an ObjectId from the string.
                 }
             },
             {

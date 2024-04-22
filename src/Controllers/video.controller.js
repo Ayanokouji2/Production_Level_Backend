@@ -82,6 +82,7 @@ const getAllVideosOfChannel = asyncHandler(async (req, res) => {
 
         const video = await Video.aggregate([
             {
+                
                 $match: {
                     owner: new mongoose.Types.ObjectId(userId)
                 }
@@ -105,7 +106,7 @@ const getAllVideosOfChannel = asyncHandler(async (req, res) => {
                 }
             }
         ])
-        console.log(video)
+        
         if (!video || video.length === 0) {
             return res.status(404).json(new ApiError(404, "No Video Found", true))
         }
@@ -115,6 +116,8 @@ const getAllVideosOfChannel = asyncHandler(async (req, res) => {
         res.status(500).json(new ApiError(500, error.message, true))
     }
 })
+
+
 export {
     uploadVideo,
     getAllVideosOfChannel

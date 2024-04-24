@@ -30,7 +30,7 @@ router
     .post(regeneratingAccessToken)
 
 router
-    .use(verifyJWT)
+    .use(verifyJWT) 
     .route("/change-password")
     .post(currentCurrentPassword)
 

@@ -15,16 +15,19 @@ import { uploadOnCloudinary } from "../Utils/CloudinaryFileUpload.js";
 
 const uploadVideo = asyncHandler(async (req, res) => {
     try {
-        const { title, description } = req.body
-
+        const { title, description, isPublished } = req.body
+        
         if (!title) {
             return res.status(400).json(new ApiError(400, "Please provide all the required fields", true))
         }
+        console.log("Heelo",req.files)
 
 
         const videoLocalPath = req.files?.video[0]?.path
         const thumbnailLocalPath = req.files?.thumbnail[0]?.path
 
+        console.log(videoLocalPath)
+        console.log(thumbnailLocalPath)
         if (!videoLocalPath)
             return res.status(400).json(new ApiError(400, "Please provide a video file", true))
 
@@ -57,6 +60,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
             thumbnail: thumbnailOption,
             title,
             description,
+            isPublished,
             owner: req.user._id,
             duration: videoUploadResponse.duration
         })
@@ -68,7 +72,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
 
 
     } catch (error) {
-        return res.status(500).json(new ApiError(500, error.messsage, true))
+        return res.status(500).json(new ApiError(500, "Error while Uploadiing Video-> "+error.messsage, true))
     }
 })
 
@@ -106,7 +110,7 @@ const getAllVideosOfChannel = asyncHandler(async (req, res) => {
                 }
             }
         ])
-        
+
         if (!video || video.length === 0) {
             return res.status(404).json(new ApiError(404, "No Video Found", true))
         }
@@ -118,7 +122,21 @@ const getAllVideosOfChannel = asyncHandler(async (req, res) => {
 })
 
 
+const updateDetailsOfTheVideo = asyncHandler( async (req, res )=>{
+    try {
+        //! Must check how to handle isPublished in the same function or different function
+        const { title, description } = req.body
+
+        if(!title && !description){
+
+        }
+
+    } catch (error) {
+        res.status(500).json(new ApiError(500,"Something Went Wrong with the Updating Details "+error.message,true))
+    }
+})
 export {
     uploadVideo,
-    getAllVideosOfChannel
+    getAllVideosOfChannel,
+    updateDetailsOfTheVideo
 }

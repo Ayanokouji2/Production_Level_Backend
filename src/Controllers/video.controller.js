@@ -142,6 +142,9 @@ const updateDetailsOfTheVideo = asyncHandler(async (req, res) => {
         if (!videoId)
             return res.status(400).json(new ApiError(400, " Select Video to update"))
 
+        if(!updateObject)
+            return  res.status(400).json(new ApiError(402, " All fields are necessary", true))
+        
         const updatedVideo = await Video.findByIdAndUpdate(videoId, {
             $set: updateObject
         }, { new: true })

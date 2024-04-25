@@ -16,13 +16,11 @@ import { uploadOnCloudinary } from "../Utils/CloudinaryFileUpload.js";
 const uploadVideo = asyncHandler(async (req, res) => {
     try {
         const { title, description, isPublished } = req.body
-        
+
         if (!title) {
             return res.status(400).json(new ApiError(400, "Please provide all the required fields", true))
         }
-        console.log("Heelo",req.files)
-
-
+      
         const videoLocalPath = req.files?.video[0]?.path
         const thumbnailLocalPath = req.files?.thumbnail[0]?.path
 
@@ -72,7 +70,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
 
 
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Error while Uploadiing Video-> "+error.messsage, true))
+        return res.status(500).json(new ApiError(500, "Error while Uploadiing Video-> " + error.messsage, true))
     }
 })
 
@@ -86,7 +84,7 @@ const getAllVideosOfChannel = asyncHandler(async (req, res) => {
 
         const video = await Video.aggregate([
             {
-                
+
                 $match: {
                     owner: new mongoose.Types.ObjectId(userId)
                 }
@@ -122,17 +120,38 @@ const getAllVideosOfChannel = asyncHandler(async (req, res) => {
 })
 
 
-const updateDetailsOfTheVideo = asyncHandler( async (req, res )=>{
+const updateDetailsOfTheVideo = asyncHandler(async (req, res) => {
     try {
         //! Must check how to handle isPublished in the same function or different function
         const { title, description } = req.body
 
-        if(!title && !description){
-
+        if (!title && !description) {
+            return res.status(400).json(new ApiError(402, " All fields are necessary", true))
         }
 
+        const updateObject = {}
+
+        if(title)
+            updateObject.title = title
+
+        if(description)
+            updateObject.description = description
+
+        const { videoId } = req.params
+
+        if (!videoId)
+            return res.status(400).json(new ApiError(400, " Select Video to update"))
+
+        const updatedVideo = await Video.findByIdAndUpdate(videoId, {
+            $set: updateObject
+        }, { new: true })
+
+        if(!updatedVideo)
+            return res.status(500).json(new ApiError(500,"Error While Updating Video Information",true))
+
+        return res.status(200).json(new ApiResponse(200,updatedVideo,"video updated"))
     } catch (error) {
-        res.status(500).json(new ApiError(500,"Something Went Wrong with the Updating Details "+error.message,true))
+        res.status(500).json(new ApiError(500, "Something Went Wrong with the Updating Details " + error.message, true))
     }
 })
 export {

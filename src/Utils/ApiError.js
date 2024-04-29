@@ -2,7 +2,7 @@ class ApiError extends Error {
     constructor(statusCode, message = " Something went wrong ", errors = [], stack="") {
         super(message)
         this.statusCode = statusCode
-        this.messages = message // Corrected from messages to message
+        this.message = message // Corrected from messages to message
         this.data = undefined
         this.errors = errors
         this.success = false

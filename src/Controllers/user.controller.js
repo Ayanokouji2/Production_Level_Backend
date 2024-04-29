@@ -49,7 +49,7 @@ const userRegister = asyncHandler(async (req, res) => {
 
         if ([username, email, password, fullName].some((field) => field === undefined || field?.trim() === "")) {
             // console.log("command was here")
-            return res.status(400).json(new ApiError(400, " Required Missing Credentials"))
+            throw new ApiError(400, " Required Missing Credentials thrown by the command")
         }
         const existing_user = await User.findOne({ $or: [{ username }, { email }] })
 
@@ -108,7 +108,7 @@ const userRegister = asyncHandler(async (req, res) => {
         return res.status(201).json(new ApiResponse(200, created_User, "User Created Succesfully"))
 
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Registeration Failed "))
+        return res.status(500).json(new ApiError(500, "Registeration Failed "+ error.message))
     }
 })
 

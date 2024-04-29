@@ -32,7 +32,7 @@ const cookieOption = {
 
 
 const userRegister = asyncHandler(async (req, res) => {
-    try {
+    // try {
         /*
          * [✔️] get user details from frontend
          * [✔️] validate the fields 
@@ -57,7 +57,7 @@ const userRegister = asyncHandler(async (req, res) => {
             return res.status(409).json(new ApiError(409, "Existing User"))
         }
 
-        const avatarLocalPath = req.files?.avatar[0]?.path
+        const avatarLocalPath = req.files?.avatar[0]?.path      // If this throws error like cannot read property of undefined even when the file is uploaded then it is because of the multer sends an connect.sid and if this is not updated then it will not send the file to the req.files. So, to solve this issue we need to create a new request in postman and then try again.
 
         var coverImageLocalPath = ""
         if (req.files.coverImage)
@@ -107,9 +107,9 @@ const userRegister = asyncHandler(async (req, res) => {
 
         return res.status(201).json(new ApiResponse(200, created_User, "User Created Succesfully"))
 
-    } catch (error) {
-        return res.status(500).json(new ApiError(500, "Registeration Failed "+ error.message))
-    }
+    // } catch (error) {
+    //     return res.status(500).json(new ApiError(500, "Registeration Failed "+ error.message))
+    // }
 })
 
 

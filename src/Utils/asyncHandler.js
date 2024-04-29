@@ -1,19 +1,17 @@
 const asyncHandler = (requestHandler) => {
-    try {
-        return (req, res, next) => {
-            Promise
-                .resolve(requestHandler(req, res, next))
-                .catch((err) => {
-                    next(err)
-                    // res.status(err.status || 500).json({
-                    //     success: false,
-                    //     message: err.message
-                    // })
-                })
-        }
-    } catch (error) {
-        console.log("Error while handling Request in AsyncHandler")
+
+    return (req, res, next) => {
+        Promise
+            .resolve(requestHandler(req, res, next))
+            .catch((err) => {
+                next(err)
+                // res.status(err.status || 500).json({
+                //     success: false,
+                //     message: err.message
+                // })
+            })
     }
+
 }
 
 export default asyncHandler

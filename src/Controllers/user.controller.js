@@ -372,8 +372,7 @@ const getOtherUserChannelProfile = asyncHandler(async (req, res) => {
             // {
             //     $lookup:{
             //         from:"Video",
-            //         localField:"username",   // we can not find videos with username because in the Video Collections owner field is store with _id.
-
+            //         localField:"_id", // This is the field of the current document
             //         foreignField:"owner",
             //         as:"videos_of_channel"
             //     }

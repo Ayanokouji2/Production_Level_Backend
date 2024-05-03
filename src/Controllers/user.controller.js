@@ -100,7 +100,7 @@ const userRegister = asyncHandler(async (req, res) => {
     const created_User = await User.findById(user._id).select("-password -refreshToken")
 
     if (!created_User) {
-        throw new ApiError(500, "Creating User failed ...!")    
+        throw new ApiError(500, "Creating User failed ...!")
     }
 
     return res.status(201).json(new ApiResponse(200, created_User, "User Created Succesfully"))
@@ -146,8 +146,6 @@ const userLogin = asyncHandler(async (req, res) => {
 
 
     // To secure the cookie by making it accessible from server not from frontend
-
-
     res
         .status(200)
         .cookie("refreshToken", refreshToken, cookieOption)
@@ -159,67 +157,61 @@ const userLogin = asyncHandler(async (req, res) => {
 
 
 const userLogout = asyncHandler(async (req, res) => {
-    try {
-        /* 
-        *  [✔️] get user from Db
-        *  [✔️] Delete refreshToken from the cookie. 
-        *  [✔️] Delete refershToken from the database.
-        */
 
-        const user = req.user
+    /* 
+    *  [✔️] get user from Db
+    *  [✔️] Delete refreshToken from the cookie. 
+    *  [✔️] Delete refershToken from the database.
+    */
 
-        const updated_user = await User.findByIdAndUpdate(user._id,
-            { $unset: { refreshToken: 1 } }, { new: true })
-            .select("-password")
+    const user = req.user
+
+    const updated_user = await User.findByIdAndUpdate(user._id,
+        { $unset: { refreshToken: 1 } }, { new: true })
+        .select("-password")
 
 
-        if (!updated_user) {
-            return res.status(500).json(new ApiError(500, "Unable to Update User refreshToken"))
-        }
-
-        req.user = undefined
-
-        return res
-            .status(200)
-            .clearCookie("refreshToken", cookieOption)
-            .clearCookie("accessToken", cookieOption)
-            .json(new ApiResponse(200, null, " User Logout Successful"))
-
-    } catch (error) {
-        return res.status(500).json(new ApiError(500, "Unable to Logout"))
+    if (!updated_user) {
+        throw new ApiError(500, "Unable to Update User refreshToken")
     }
+
+    req.user = undefined
+
+    return res
+        .status(200)
+        .clearCookie("refreshToken", cookieOption)
+        .clearCookie("accessToken", cookieOption)
+        .json(new ApiResponse(200, null, " User Logout Successful"))
+
+
 })
 
 
 const regeneratingAccessToken = asyncHandler(async (req, res) => {
-    try {
-        const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken   // {req.body.refreshToken} -> bcz we are assuming user is using mobile phone
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken   // {req.body.refreshToken} -> bcz we are assuming user is using mobile phone
 
-        if (!incomingRefreshToken)
-            return res.status(401).json(new ApiError(401, "you are unauthorized to perform this action"))
+    if (!incomingRefreshToken)
+        throw new ApiError(401, "you are unauthorized to perform this action")
 
-        const decodedRefreshToken = await jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+    const decodedRefreshToken = await jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
 
-        const user = await User.findById(decodedRefreshToken?._id)
+    const user = await User.findById(decodedRefreshToken?._id)
 
-        if (!user)
-            return res.status(404).json(new ApiError(404, "No User found "))
+    if (!user)
+        throw new ApiError(404, "No User found ")
 
 
-        if (incomingRefreshToken !== user.refreshToken)
-            return res.status(401).json(new ApiError(401, "RefreshToken has expired or used "))
+    if (incomingRefreshToken !== user.refreshToken)
+        throw new ApiError(401, "RefreshToken has expired or used ")
 
-        const { refreshToken, accessToken } = await generateRefreshAndAccessToken(user?._id)
+    const { refreshToken, accessToken } = await generateRefreshAndAccessToken(user?._id)
 
-        res
-            .status(200)
-            .cookie("accessToken", accessToken, cookieOption)
-            .cookie("refreshToken", refreshToken, cookieOption)
-            .json(new ApiResponse(200, { accessToken, refreshToken }, "AccessToken Generated and Login Succesful"))
+    res
+        .status(200)
+        .cookie("accessToken", accessToken, cookieOption)
+        .cookie("refreshToken", refreshToken, cookieOption)
+        .json(new ApiResponse(200, { accessToken, refreshToken }, "AccessToken Generated and Login Succesful"))
 
-    } catch (error) {
-        return res.status(500).json(new ApiError(500, "Unable to Logout"))
-    }
 })
 
 

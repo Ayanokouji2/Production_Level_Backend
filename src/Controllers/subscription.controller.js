@@ -11,8 +11,8 @@ const subscribeToChannel = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Channel ID is required');
 
     const response = await Subscription.create({
-       channel:user,
-       subscriber: channel 
+       channel,
+       subscriber: user 
     })
 
     if(!response)

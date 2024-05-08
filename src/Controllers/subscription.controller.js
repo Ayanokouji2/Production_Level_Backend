@@ -1,7 +1,7 @@
-import Subscription from '../Models/subscription.model.js'; 
+import { Subscription } from '../Models/subscription.model.js'; 
 import asyncHandler from '../Utils/asyncHandler.js';
-import ApiError from '../Utils/ApiError.js';
-import ApiResponse from '../Utils/ApiResponse.js';
+import { ApiError } from '../Utils/ApiError.js';
+import { ApiResponse } from '../Utils/ApiResponse.js';
 
 const subscribeToChannel = asyncHandler(async (req, res) => {
     const user = req.user;

@@ -20,9 +20,12 @@ app.use(cookieParser())
 
 import userRouter from './Routes/user.routes.js'  // can only import with different name if we export it using default keyword
 import videoRouter from './Routes/video.routes.js'
+import subscriptionRouter from './Routes/subscription.routes.js'
 
 app.use("/api/v1/users", userRouter)
 
 app.use("/api/v1/video", videoRouter)
+
+app.use("/api/v1/subscription", subscriptionRouter)
 
 export { app }

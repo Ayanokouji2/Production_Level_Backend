@@ -18,7 +18,7 @@ const subscribeToChannel = asyncHandler(async (req, res) => {
     if (!response)
         throw new ApiError(500, 'Failed to subscribe to channel');
 
-    res.status(201).json(new ApiResponse(201, response, 'Subscribed to channel successfully'))
+    res.status(201).json(new ApiResponse(201, null, 'Subscribed to channel successfully'))
 })
 
 const unsubscribeFromChannel = asyncHandler(async (req, res) => {

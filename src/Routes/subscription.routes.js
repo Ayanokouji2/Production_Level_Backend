@@ -5,9 +5,10 @@ import { verifyJWT } from '../Middleware/auth.middleware.js';
 const router = Router();
 
 router
+    .use(verifyJWT)
     .route('/:channelId')
-    .post(verifyJWT,subscribeToChannel)
-    .delete(verifyJWT,unsubscribeFromChannel)
+    .post(subscribeToChannel)
+    .delete(unsubscribeFromChannel)
 
 
 export default router;

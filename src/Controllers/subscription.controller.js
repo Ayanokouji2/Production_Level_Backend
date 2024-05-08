@@ -10,10 +10,24 @@ const subscribeToChannel = asyncHandler(async (req, res) => {
     if (!channel)
         throw new ApiError(400, 'Channel ID is required');
 
+    const existingSubscriptionCheck = await Subscription.findOne({ $and: [{ channel }, { subscriber: user }] });   
+
+    if (existingSubscriptionCheck)
+        throw new ApiError(400, 'Already subscribed to channel');
+
     const response = await Subscription.create({
         channel,
         subscriber: user
     })
+
+    /**
+     * The Two Db Calls can be reduced to one Db call by using the following code
+     * 
+     * cosnt response = await Subscription.findOneAndUpdate({
+     * $and: [{ channel }, { subscriber: user }]},  // the query that is used to find the document to update
+     * { channel, subscriber: user },  // the data that is to be updated
+     * { upsert: true, new: true })  //upsert is a boolean flag that is used to check whether the document exists from the query provided and if exist then update the document and it not then create a new document 
+     */
 
     if (!response)
         throw new ApiError(500, 'Failed to subscribe to channel');

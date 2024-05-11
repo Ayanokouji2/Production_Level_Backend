@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import session from 'express-session'
 
 const app = express()
 
@@ -12,7 +13,12 @@ app.use(cors({
 app.use(express.json({ limit: "20Kb" }));
 app.use(express.urlencoded({ extended: true, limit: "20Kb" }))
 app.use(express.static("public"))  // any folder that can be accessed for storing file in the folder
-
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: true }
+  }))
 app.use(cookieParser())
 
 

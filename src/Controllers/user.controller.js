@@ -125,6 +125,7 @@ const userLogin = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Fields are Required")
     }
 
+    console.log(username,password)
     const user_from_db = await User.findOne({ $or: [{ username: username.toLowerCase() }, { email }] })
 
     if (!user_from_db) {
@@ -146,6 +147,7 @@ const userLogin = asyncHandler(async (req, res) => {
 
 
     // To secure the cookie by making it accessible from server not from frontend
+    // req.session.loggedIn = refreshToken
     res
         .status(200)
         .cookie("refreshToken", refreshToken, cookieOption)
@@ -242,6 +244,7 @@ const currentCurrentPassword = asyncHandler(async (req, res) => {
 
 const getCurrentUser = asyncHandler(async (req, res) => {
     try {
+        console.log(req.user)
         return res.status(200).json(new ApiResponse(200, req.user, "Current User"))
 
     } catch (error) {

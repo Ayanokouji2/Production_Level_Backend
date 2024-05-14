@@ -14,18 +14,23 @@ import { uploadOnCloudinary } from "../Utils/CloudinaryFileUpload.js";
  */
 
 const uploadVideo = asyncHandler(async (req, res) => {
-    try {
+    // try {
+
         const { title, description, isPublished } = req.body
 
         if (!title) {
             return res.status(400).json(new ApiError(400, "Please provide all the required fields", true))
         }
       
+        
+
         const videoLocalPath = req.files?.video[0]?.path
         const thumbnailLocalPath = req.files?.thumbnail[0]?.path
 
+
         console.log(videoLocalPath)
         console.log(thumbnailLocalPath)
+        
         if (!videoLocalPath)
             return res.status(400).json(new ApiError(400, "Please provide a video file", true))
 
@@ -68,10 +73,6 @@ const uploadVideo = asyncHandler(async (req, res) => {
 
         return res.status(201).json(new ApiResponse(201, video, "Video uploaded successfully"))
 
-
-    } catch (error) {
-        return res.status(500).json(new ApiError(500, "Error while Uploadiing Video-> " + error.messsage, true))
-    }
 })
 
 

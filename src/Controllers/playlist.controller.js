@@ -5,7 +5,7 @@ import { ApiError } from '../utils/ApiError.js';
 import mongoose from 'mongoose';
 
 export const addVideoToPlaylist = asyncHandler(async (req, res) => {
-    var playlistId = req.body.playlistId
+    var { playlistId, playlistName } = req.body
 
     const videoId = req.params.videoId
 
@@ -22,14 +22,20 @@ export const addVideoToPlaylist = asyncHandler(async (req, res) => {
         return res.status(200).json(new ApiResponse(200, videos_playlist, 'Video already in playlist'))
 
 
-    const updated_playlist = await Playlist.findByIdAndUpdate(playlistId, {
+    var updated_playlist = await Playlist.findByIdAndUpdate(playlistId, {
         $push: {
             videos: videoId
         }
-    }, { new: true, useFindAndModify: false, upsert: true })
+    }, { new: true, useFindAndModify: false })
 
+    
     if (!updated_playlist)
-        throw new ApiError(404, 'Playlist not found')
+        updated_playlist = await Playlist.create({
+            _id: playlistId,
+            name: playlistName,
+            videos: [videoId],
+            owner: req.user?._id
+        })
 
     res.status(200).json(new ApiResponse(200, updated_playlist, 'Video added to playlist'))
 })

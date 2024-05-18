@@ -28,7 +28,7 @@ export const addVideoToPlaylist = asyncHandler(async (req, res) => {
         }
     }, { new: true, useFindAndModify: false })
 
-    
+
     if (!updated_playlist)
         updated_playlist = await Playlist.create({
             _id: playlistId,
@@ -38,4 +38,25 @@ export const addVideoToPlaylist = asyncHandler(async (req, res) => {
         })
 
     res.status(200).json(new ApiResponse(200, updated_playlist, 'Video added to playlist'))
+})
+
+export const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
+
+    const videoId = req.params.videoId
+
+    if (!videoId)
+        throw new ApiError(400, 'Video ID is required')
+
+    const playlistId = req.body.playlistId
+
+    const playlistFromDB = await Playlist.findById(playlistId).select("videos")
+
+    if (!playlistFromDB.videos.includes(videoId))
+        throw new ApiError(400, 'Video not in playlist')
+
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(playlistId, {
+        $pull: { videos: videoId }
+    },{new: true})
+
+    res.status(200).json(new ApiResponse(200, updatedPlaylist, 'Video removed from playlist'))
 })
